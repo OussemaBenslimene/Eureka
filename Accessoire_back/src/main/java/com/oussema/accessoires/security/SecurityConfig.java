@@ -1,11 +1,10 @@
-package com.nadhem.users.security;
+package com.oussema.accessoires.security;
 
 import java.util.Collections;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,17 +21,11 @@ import jakarta.servlet.http.HttpServletRequest;
 @EnableWebSecurity
 public class SecurityConfig {
 	
-	@Autowired
-	AuthenticationManager authMgr;
-	
-	
-	
 	@Bean
 	public SecurityFilterChain filterChain (HttpSecurity http) throws Exception
 	{
 		http.sessionManagement( session -> 
 		session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-		
 		.csrf( csrf -> csrf.disable()) 
 		
 		.cors(cors -> cors.configurationSource(new CorsConfigurationSource() {
@@ -43,28 +36,30 @@ public class SecurityConfig {
                 cors.setAllowedMethods(Collections.singletonList("*"));
                 cors.setAllowedHeaders(Collections.singletonList("*"));
                 cors.setExposedHeaders(Collections.singletonList("Authorization"));
+                
                 return cors;
             }
         }))
-
+				
+	     .authorizeHttpRequests( requests -> requests
+			    		  .requestMatchers("/api/all/**").permitAll()
+			    		  .requestMatchers("/api/accmarque/**").permitAll()
+			    		  .requestMatchers("/api/accsByName/**").permitAll()
+			    		  .requestMatchers("/mar/**").permitAll()
+			    		  .requestMatchers("/api/image/upload").permitAll()
+			    		  .requestMatchers("/api/image/uploadImageAcc/**").permitAll()
+			    		  .requestMatchers("/api/image/getImagesAcc/**").permitAll()
+						  .requestMatchers(HttpMethod.GET,"/api/getAccessoireById/**").hasAnyAuthority("ADMIN","USER")
+						  .requestMatchers(HttpMethod.POST,"/api/createAccessoire/**").hasAnyAuthority("ADMIN")
+						  .requestMatchers(HttpMethod.PUT,"/api/updateAccessoire/**").permitAll()
+						  .requestMatchers(HttpMethod.DELETE,"/api/deleteAccessoire/**").hasAuthority("ADMIN")
+						.anyRequest().authenticated() )
+	     
+	     .addFilterBefore(new JWTAuthorizationFilter(),
+				    UsernamePasswordAuthenticationFilter.class);
 		
-		.authorizeHttpRequests( requests -> requests
-				.requestMatchers("/login" , "/register/**","/verifyEmail/**").permitAll()
-				.requestMatchers("/all").hasAuthority("ADMIN")
-				.anyRequest().authenticated() )
-		
-		.addFilterBefore(new JWTAuthenticationFilter(authMgr), 
-				UsernamePasswordAuthenticationFilter.class)
-		
-		.addFilterBefore(new JWTAuthorizationFilter(),
-			    UsernamePasswordAuthenticationFilter.class);
-		
-		
-
 	return http.build();
 	}
-	
-	
 	
 
 }

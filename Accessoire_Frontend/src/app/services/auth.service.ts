@@ -15,7 +15,7 @@ export class AuthService {
 
   private helper = new JwtHelperService();
 
-  apiURL: string = 'http://localhost:8081/users';
+  apiURL: string = 'http://localhost:8080/users';
   token!: string;
 
   public loggedUser!: string;

@@ -1,0 +1,29 @@
+
+server:
+  port: 8080
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+
+spring:
+  application:
+    name: ApiGateway
+  cloud:
+    gateway:
+      routes:
+        - id: accessoire-service-route
+          uri: lb://accessoire-service
+          predicates:
+            - Path=/accessoire/**
+        - id: user-service-route
+          uri: lb://users-service
+          predicates:
+            - Path=/users/**
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+
+
+
+
